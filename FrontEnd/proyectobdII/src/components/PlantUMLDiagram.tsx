@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Box, Heading, Image, useColorModeValue } from "@chakra-ui/react";
 import plantumlEncoder from "plantuml-encoder";
 
 const encodePlantUML = (uml: string): string => {
@@ -31,10 +32,16 @@ const PlantUMLDiagram: React.FC<PlantUMLProps> = ({ data }) => {
   const plantUMLServerUrl = `http://www.plantuml.com/plantuml/svg/${encodedUML}`;
 
   return (
-    <div>
-      <h1>Diagrama de PlantUML</h1>
-      {umlCode && <img src={plantUMLServerUrl} alt="Diagrama de PlantUML" />}
-    </div>
+    <Box p={4} borderRadius="md" shadow="md">
+      {umlCode && (
+        <Image
+          src={plantUMLServerUrl}
+          alt="Diagrama de PlantUML"
+          borderRadius="md"
+          boxShadow="sm"
+        />
+      )}
+    </Box>
   );
 };
 
