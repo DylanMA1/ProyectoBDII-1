@@ -1,23 +1,18 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
-  Button,
   FormControl,
   FormLabel,
   Input,
+  Button,
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
-  VStack,
-  HStack,
-  useToast,
 } from "@chakra-ui/react";
-import { setConnection } from "../hooks/useNodeApi";
 
-interface FormProps {
+interface PostgresConnectionFormProps {
   formData: {
     user: string;
     host: string;
@@ -25,145 +20,86 @@ interface FormProps {
     password: string;
     port: string;
   };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{
-      user: string;
-      host: string;
-      database: string;
-      password: string;
-      port: string;
-    }>
-  >;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleDisconnect: () => void;
+  connected: boolean;
   isOpen: boolean;
   onClose: () => void;
-  connected: boolean;
-  handleDisconnect: () => void;
 }
 
-const Form: React.FC<FormProps> = ({
+const Form: React.FC<PostgresConnectionFormProps> = ({
   formData,
-  setFormData,
+  handleChange,
+  handleSubmit,
+  handleDisconnect,
+  connected,
   isOpen,
   onClose,
-  connected,
-  handleDisconnect,
 }) => {
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const url = await setConnection(formData);
-      toast({
-        title: "Conexión exitosa.",
-        description:
-          "La conexión con PostgreSQL se ha establecido correctamente.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
-      onClose();
-    } catch (error) {
-      console.error("Error al establecer la conexión:", error);
-      toast({
-        title: "Error de conexión.",
-        description:
-          "Hubo un problema al intentar establecer la conexión con PostgreSQL.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
-      <ModalContent borderRadius="md" p={4}>
-        <HStack padding={4} bg="normal" marginBottom={1}>
-          <Box fontSize="lg" fontWeight="normal">
-            Conexión a PostgreSQL
-          </Box>
-          <ModalCloseButton _hover={{ color: "red.500" }} size="lg" />
-        </HStack>
-        <ModalBody>
-          <form onSubmit={handleSubmit}>
-            <VStack spacing={4} align="stretch">
-              <FormControl id="user" isRequired>
-                <FormLabel>Usuario</FormLabel>
-                <Input
-                  type="text"
-                  name="user"
-                  value={formData.user}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl id="host" isRequired>
-                <FormLabel>Host</FormLabel>
-                <Input
-                  type="text"
-                  name="host"
-                  value={formData.host}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl id="database" isRequired>
-                <FormLabel>Base de Datos</FormLabel>
-                <Input
-                  type="text"
-                  name="database"
-                  value={formData.database}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl id="password" isRequired>
-                <FormLabel>Contraseña</FormLabel>
-                <Input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-              </FormControl>
-              <FormControl id="port" isRequired>
-                <FormLabel>Puerto</FormLabel>
-                <Input
-                  type="text"
-                  name="port"
-                  value={formData.port}
-                  onChange={handleChange}
-                />
-              </FormControl>
-            </VStack>
-            <ModalFooter>
-              <Button
-                colorScheme="teal"
-                type="submit"
-                mr={3}
-                isLoading={loading}
-              >
+      <ModalContent maxWidth="60vw" borderRadius="md" overflow="hidden">
+        <ModalCloseButton />
+        <ModalBody padding={2}>
+          <Box as="form" onSubmit={handleSubmit} mt={4}>
+            <FormControl id="user" mb={4} isRequired>
+              <FormLabel>Usuario</FormLabel>
+              <Input
+                type="text"
+                name="user"
+                value={formData.user}
+                onChange={handleChange}
+              />
+            </FormControl>
+            <FormControl id="host" mb={4} isRequired>
+              <FormLabel>Host</FormLabel>
+              <Input
+                type="text"
+                name="host"
+                value={formData.host}
+                onChange={handleChange}
+              />
+            </FormControl>
+            <FormControl id="database" mb={4} isRequired>
+              <FormLabel>Base de Datos</FormLabel>
+              <Input
+                type="text"
+                name="database"
+                value={formData.database}
+                onChange={handleChange}
+              />
+            </FormControl>
+            <FormControl id="password" mb={4} isRequired>
+              <FormLabel>Contraseña</FormLabel>
+              <Input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </FormControl>
+            <FormControl id="port" mb={4}>
+              <FormLabel>Puerto (Opcional)</FormLabel>
+              <Input
+                type="text"
+                name="port"
+                value={formData.port}
+                onChange={handleChange}
+              />
+            </FormControl>
+            {!connected && (
+              <Button colorScheme="teal" type="submit" mr={3}>
                 Conectar
               </Button>
-              {connected && (
-                <Button colorScheme="red" onClick={handleDisconnect}>
-                  Desconectar
-                </Button>
-              )}
-              <Button onClick={onClose}>Cerrar</Button>
-            </ModalFooter>
-          </form>
+            )}
+            {connected && (
+              <Button colorScheme="red" onClick={handleDisconnect}>
+                Desconectar
+              </Button>
+            )}
+          </Box>
         </ModalBody>
       </ModalContent>
     </Modal>

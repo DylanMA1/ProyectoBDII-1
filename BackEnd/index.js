@@ -87,7 +87,7 @@ app.get('/api/postgresql-data', (req, res) => {
     return res.status(500).send('Conexión no establecida');
   }
 
-  pgPool.query(`
+  const columnsQuery = `
     SELECT
       table_name, 
       column_name, 
@@ -95,14 +95,37 @@ app.get('/api/postgresql-data', (req, res) => {
       is_nullable, 
       column_default
     FROM information_schema.columns
-    WHERE table_schema = 'public'`, (err, results) => {
-    if (err) {
-      console.error('Error en la consulta a PostgreSQL:', err);
-      return res.status(500).send('Error en la consulta a PostgreSQL');
-    }
-    res.json(results.rows); // Devuelve los detalles de las columnas de las tablas
+    WHERE table_schema = 'public'`;
+
+  const foreignKeysQuery = `
+    SELECT
+      tc.table_name,
+      kcu.column_name,
+      ccu.table_name AS referenced_table,
+      ccu.column_name AS referenced_column
+    FROM
+      information_schema.table_constraints AS tc
+      JOIN information_schema.key_column_usage AS kcu
+        ON tc.constraint_name = kcu.constraint_name
+      JOIN information_schema.constraint_column_usage AS ccu
+        ON ccu.constraint_name = tc.constraint_name
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+  `;
+
+  Promise.all([
+    pgPool.query(columnsQuery),
+    pgPool.query(foreignKeysQuery)
+  ]).then(([columnsResult, foreignKeysResult]) => {
+    res.json({
+      columns: columnsResult.rows,
+      foreignKeys: foreignKeysResult.rows
+    });
+  }).catch(err => {
+    console.error('Error en la consulta a PostgreSQL:', err);
+    res.status(500).send('Error en la consulta a PostgreSQL');
   });
 });
+
 
 
 

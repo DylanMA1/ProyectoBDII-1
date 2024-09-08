@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Heading, Image, useColorModeValue } from "@chakra-ui/react";
+import { Box, Image } from "@chakra-ui/react";
 import plantumlEncoder from "plantuml-encoder";
 
 const encodePlantUML = (uml: string): string => {
@@ -7,24 +7,48 @@ const encodePlantUML = (uml: string): string => {
 };
 
 interface PlantUMLProps {
-  data: any[];
+  data: {
+    columns: any[];
+    foreignKeys: any[];
+  };
 }
 
 const PlantUMLDiagram: React.FC<PlantUMLProps> = ({ data }) => {
   const [umlCode, setUmlCode] = useState("");
 
   useEffect(() => {
-    if (data.length > 0) {
-      const entities =
-        data.reduce((umlString, table) => {
-          return `${umlString}
-          entity ${table.table_name} {
-            ${table.column_name} : ${table.data_type}
-          }
-        `;
-        }, "@startuml\n") + "\n@enduml";
+    if (data.columns.length > 0) {
+      let entities = "@startuml\n";
+      let relationships = "";
 
-      setUmlCode(entities);
+      // Agrupa columnas por tabla
+      const tableColumns: { [key: string]: any[] } = {};
+      data.columns.forEach((column: any) => {
+        if (!tableColumns[column.table_name]) {
+          tableColumns[column.table_name] = [];
+        }
+        tableColumns[column.table_name].push(column);
+      });
+
+      // Genera entidades
+      Object.keys(tableColumns).forEach((tableName) => {
+        entities += `
+        entity ${tableName} {
+          ${tableColumns[tableName]
+            .map((col: any) => `${col.column_name} : ${col.data_type}`)
+            .join("\n")}
+        }
+        `;
+      });
+
+      // Genera relaciones
+      data.foreignKeys.forEach((fk: any) => {
+        relationships += `${fk.table_name} --> ${fk.referenced_table} : ${fk.column_name} -> ${fk.referenced_column}\n`;
+      });
+
+      // Completa el código UML
+      const uml = `${entities}\n${relationships}\n@enduml`;
+      setUmlCode(uml);
     }
   }, [data]);
 

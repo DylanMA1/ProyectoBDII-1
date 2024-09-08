@@ -1,50 +1,32 @@
-import { Button, Card, List } from "@chakra-ui/react";
-import { useState } from "react";
+import { Button, Card, Heading, List } from "@chakra-ui/react";
 import { BiLogoPostgresql } from "react-icons/bi";
-import Form from "./Form";
 
 interface DatabaseButtonsProps {
-  formData: any; // Ajusta el tipo según tu estado en `App`
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
-  connected: boolean;
-  handleDisconnect: () => void;
+  onOpen: () => void;
 }
 
-const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({
-  formData,
-  setFormData,
-  connected,
-  handleDisconnect,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleOpen = () => setIsOpen(true);
-  const handleClose = () => setIsOpen(false);
-
+const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
   return (
-    <>
-      <Card padding={4} borderRadius="md" boxShadow="md">
-        <List>
-          <Button
-            leftIcon={<BiLogoPostgresql color="lightblue" />}
-            onClick={handleOpen}
-          >
-            PostgreSQL
-          </Button>
-        </List>
-      </Card>
-
-      {isOpen && (
-        <Form
-          isOpen={isOpen}
-          onClose={handleClose}
-          formData={formData}
-          setFormData={setFormData}
-          connected={connected}
-          handleDisconnect={handleDisconnect}
-        />
-      )}
-    </>
+    <Card
+      padding={4}
+      boxShadow="md"
+      backgroundColor="gray.700"
+      borderRadius={10}
+      maxWidth={300}
+      // height="100%"
+      minHeight={730}
+    >
+      <Heading marginBottom={2}>Bases de Datos</Heading>
+      <List alignContent="center">
+        <Button
+          leftIcon={<BiLogoPostgresql color="lightblue" />}
+          onClick={onOpen}
+          width="100%"
+        >
+          PostgreSQL
+        </Button>
+      </List>
+    </Card>
   );
 };
 
