@@ -2,18 +2,17 @@ import React, { useEffect, useState } from "react";
 import {
   Grid,
   GridItem,
+  useToast,
+  useDisclosure,
   Box,
   List,
   ListItem,
-  useToast,
-  useDisclosure,
 } from "@chakra-ui/react";
 import PlantUMLDiagram from "./components/PlantUMLDiagram";
 import DatabaseButtons from "./components/DatabaseButtons";
 import axios from "axios";
 import Form from "./components/Form";
 
-// Definimos la interfaz para el tipo de datos que esperamos de la API
 interface PostgresData {
   columns: any[];
   foreignKeys: any[];
@@ -31,6 +30,7 @@ function App() {
     password: "",
     port: "",
   });
+
   const [connectionUrl, setConnectionUrl] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
   const toast = useToast();
@@ -57,7 +57,7 @@ function App() {
         duration: 5000,
         isClosable: true,
       });
-      onClose(); // Cierra el modal al conectar
+      onClose();
     } catch (error) {
       console.error("Error al establecer la conexión:", error);
       toast({
@@ -117,6 +117,14 @@ function App() {
 
         <GridItem>
           <PlantUMLDiagram data={postgresData} />
+          <Box mt={8}>
+            Tablas en PostgreSQL:
+            <List spacing={3}>
+              {postgresData.columns.map((item, index) => (
+                <ListItem key={index}>{item.table_name}</ListItem>
+              ))}
+            </List>
+          </Box>
         </GridItem>
       </Grid>
     </>
