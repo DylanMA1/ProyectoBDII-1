@@ -29,6 +29,7 @@ function App() {
     database: "",
     password: "",
     port: "",
+    dbType: "postgresql", // Nuevo campo para el tipo de base de datos
   });
 
   const [connectionUrl, setConnectionUrl] = useState<string>("");
@@ -36,7 +37,7 @@ function App() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -46,13 +47,19 @@ function App() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/set-connection", formData);
-      setConnectionUrl("http://localhost:5000/api/postgresql-data");
+      if (formData.dbType === "postgresql") {
+        // Conectar a PostgreSQL
+        await axios.post("http://localhost:5000/api/set-connection", formData);
+        setConnectionUrl("http://localhost:5000/api/postgresql-data");
+      } else if (formData.dbType === "sqlserver") {
+        // Conectar a SQL Server
+        await axios.post("http://localhost:5000/api/set-sqlserver-connection", formData);
+        setConnectionUrl("http://localhost:5000/api/sqlserver-data");
+      }
       setConnected(true);
       toast({
         title: "Conexión exitosa.",
-        description:
-          "La conexión con PostgreSQL se ha establecido correctamente.",
+        description: `La conexión con ${formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"} se ha establecido correctamente.`,
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -62,8 +69,7 @@ function App() {
       console.error("Error al establecer la conexión:", error);
       toast({
         title: "Error de conexión.",
-        description:
-          "Hubo un problema al intentar establecer la conexión con PostgreSQL.",
+        description: `Hubo un problema al intentar establecer la conexión con ${formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"}.`,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -76,7 +82,7 @@ function App() {
       const response = await axios.get<PostgresData>(connectionUrl);
       setPostgresData(response.data);
     } catch (error) {
-      console.error("Error al obtener datos de PostgreSQL:", error);
+      console.error("Error al obtener datos:", error);
     }
   };
 
@@ -92,7 +98,7 @@ function App() {
     setConnected(false);
     toast({
       title: "Desconectado.",
-      description: "La conexión con PostgreSQL ha sido cerrada.",
+      description: `La conexión con ${formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"} ha sido cerrada.`,
       status: "info",
       duration: 5000,
       isClosable: true,
@@ -118,7 +124,7 @@ function App() {
         <GridItem>
           <PlantUMLDiagram data={postgresData} />
           <Box mt={8}>
-            Tablas en PostgreSQL:
+            Tablas en {formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"}:
             <List spacing={3}>
               {postgresData.columns.map((item, index) => (
                 <ListItem key={index}>{item.table_name}</ListItem>

@@ -1,5 +1,6 @@
 const express = require('express');
 const { Pool } = require('pg');
+const sql = require('mssql');
 const cors = require('cors');
 
 const app = express();
@@ -10,6 +11,97 @@ app.use(express.json());
 
 let pgPool;
 
+// Configuración de la conexión a SQL Server
+let sqlPool;
+
+app.post('/api/set-sqlserver-connection', (req, res) => {
+  const { user, password, server, database } = req.body;
+  
+  console.log('Received SQL Server connection parameters:', req.body);
+
+  // Verifica que todos los campos necesarios estén presentes
+  if (!user || !password || !server || !database) {
+    return res.status(400).send('Faltan parámetros de conexión');
+  }
+
+  // Configuración de la conexión con los valores de req.body
+  const sqlServerConfig = {
+    user: user,
+    password: password,
+    server: server, // Ejemplo: 'localhost' o la dirección de tu servidor SQL
+    database: database,
+    options: {
+      encrypt: true, // True si necesitas una conexión segura (Azure, etc.)
+      trustServerCertificate: true // Para conexiones locales o pruebas
+    }
+  };
+
+  // Conectar a SQL Server y asignar la conexión a sqlPool
+  sql.connect(sqlServerConfig).then(pool => {
+    if (pool.connected) {
+      console.log('Conectado a SQL Server');
+      sqlPool = pool; // Asignar la conexión a la variable global sqlPool
+
+      // Ejecutar consulta para obtener las tablas
+      return pool.request().query(`
+        SELECT TABLE_NAME 
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_TYPE = 'BASE TABLE'
+      `);
+    }
+  }).then(result => {
+    // Enviar las tablas como respuesta
+    res.json(result.recordset);
+  }).catch(err => {
+    console.error('Error al conectar a SQL Server:', err);
+    res.status(500).send('Error al conectar a SQL Server');
+  });
+}); 
+
+app.get('/api/sqlserver-data', async (req, res) => {
+  if (!sqlPool) {
+    return res.status(500).send('Conexión no establecida');
+  }
+
+  const columnsQuery = `
+    SELECT 
+      TABLE_NAME as table_name,
+      COLUMN_NAME as column_name,
+      DATA_TYPE as data_type,
+      IS_NULLABLE as is_nullable,
+      COLUMN_DEFAULT as column_default
+    FROM INFORMATION_SCHEMA.COLUMNS
+  `;
+
+  const foreignKeysQuery = `
+    SELECT 
+      fk.name AS constraint_name,
+      tp.name AS table_name,
+      cp.name AS column_name,
+      tr.name AS referenced_table,
+      cr.name AS referenced_column
+    FROM sys.foreign_keys AS fk
+    INNER JOIN sys.tables AS tp ON fk.parent_object_id = tp.object_id
+    INNER JOIN sys.columns AS cp ON fk.parent_object_id = cp.object_id
+    INNER JOIN sys.tables AS tr ON fk.referenced_object_id = tr.object_id
+    INNER JOIN sys.columns AS cr ON fk.referenced_object_id = cr.object_id
+  `;
+
+  try {
+    const [columnsResult, foreignKeysResult] = await Promise.all([
+      sqlPool.request().query(columnsQuery),
+      sqlPool.request().query(foreignKeysQuery)
+    ]);
+    res.json({
+      columns: columnsResult.recordset,
+      foreignKeys: foreignKeysResult.recordset
+    });
+  } catch (err) {
+    console.error('Error en la consulta a SQL Server:', err);
+    res.status(500).send('Error en la consulta a SQL Server');
+  }
+});
+  
 // Configuración de la conexión a MySQL
 //const mysqlConnection = mysql.createConnection({
 //  host: 'localhost',

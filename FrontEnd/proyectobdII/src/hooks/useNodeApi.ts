@@ -17,3 +17,21 @@ export const fetchPostgresData = async (connectionUrl: string) => {
     throw new Error("Error al obtener datos de PostgreSQL");
   }
 };
+
+export const setSqlServerConnection = async (formData: any) => {
+  try {
+    await axios.post("http://localhost:5000/api/set-sqlserver-connection", formData);
+    return "http://localhost:5000/api/sqlserver-data";
+  } catch (error) {
+    throw new Error("Error al establecer la conexión con SQL Server");
+  }
+};
+
+export const fetchSqlServerData = async (connectionUrl: string) => {
+  try {
+    const response = await axios.get(connectionUrl);
+    return response.data;
+  } catch (error) {
+    throw new Error("Error al obtener datos de SQL Server");
+  }
+};
