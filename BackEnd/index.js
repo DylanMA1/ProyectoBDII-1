@@ -10,7 +10,7 @@ app.use(express.json());
 
 let pgPool;
 
-// Configuración de la conexión a MySQL
+// Configuración de la conexión a MySQL 
 //const mysqlConnection = mysql.createConnection({
 //  host: 'localhost',
 //  user: 'mysql-user', // Cambia estos valores por los tuyos
@@ -43,7 +43,7 @@ app.post('/api/set-connection', (req, res) => {
 //  }
 //};
 
-// Verificar conexión a MySQL
+// Verificar conexión a MySQL 
 //mysqlConnection.connect(err => {
 //  if (err) {
 //    console.error('Error al conectar a MySQL:', err);
