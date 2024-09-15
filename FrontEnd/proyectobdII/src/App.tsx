@@ -26,10 +26,12 @@ function App() {
   const [formData, setFormData] = useState({
     user: "",
     host: "",
+    server: "", // Agrega esta propiedad
     database: "",
     password: "",
     port: "",
-    dbType: "postgresql", // Nuevo campo para el tipo de base de datos
+    dbType: "",
+    authType: "", // Agrega esta propiedad
   });
 
   const [connectionUrl, setConnectionUrl] = useState<string>("");
@@ -37,7 +39,9 @@ function App() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -53,13 +57,18 @@ function App() {
         setConnectionUrl("http://localhost:5000/api/postgresql-data");
       } else if (formData.dbType === "sqlserver") {
         // Conectar a SQL Server
-        await axios.post("http://localhost:5000/api/set-sqlserver-connection", formData);
+        await axios.post(
+          "http://localhost:5000/api/set-sqlserver-connection",
+          formData
+        );
         setConnectionUrl("http://localhost:5000/api/sqlserver-data");
       }
       setConnected(true);
       toast({
         title: "Conexión exitosa.",
-        description: `La conexión con ${formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"} se ha establecido correctamente.`,
+        description: `La conexión con ${
+          formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"
+        } se ha establecido correctamente.`,
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -69,7 +78,9 @@ function App() {
       console.error("Error al establecer la conexión:", error);
       toast({
         title: "Error de conexión.",
-        description: `Hubo un problema al intentar establecer la conexión con ${formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"}.`,
+        description: `Hubo un problema al intentar establecer la conexión con ${
+          formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"
+        }.`,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -92,13 +103,19 @@ function App() {
     }
   }, [connectionUrl]);
 
+  useEffect(() => {
+    console.log("Postgres Data:", postgresData);
+  }, [postgresData]); // Agrega este useEffect para imprimir los datos
+
   const handleDisconnect = () => {
     setConnectionUrl("");
     setPostgresData({ columns: [], foreignKeys: [] });
     setConnected(false);
     toast({
       title: "Desconectado.",
-      description: `La conexión con ${formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"} ha sido cerrada.`,
+      description: `La conexión con ${
+        formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"
+      } ha sido cerrada.`,
       status: "info",
       duration: 5000,
       isClosable: true,
@@ -124,7 +141,8 @@ function App() {
         <GridItem>
           <PlantUMLDiagram data={postgresData} />
           <Box mt={8}>
-            Tablas en {formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"}:
+            Tablas en{" "}
+            {formData.dbType === "postgresql" ? "PostgreSQL" : "SQL Server"}:
             <List spacing={3}>
               {postgresData.columns.map((item, index) => (
                 <ListItem key={index}>{item.table_name}</ListItem>
