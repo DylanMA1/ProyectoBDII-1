@@ -25,13 +25,13 @@ const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
         >
           PostgreSQL
         </Button>
-          <Button
+{/*           <Button
     leftIcon={<BiLogoPostgresql color="red" />}
     onClick={onOpen} // Ajusta la lógica de apertura si es necesario
     width="100%"
 >
   SQL Server
-</Button>
+</Button> */}
       </List>
     </Card>
   );

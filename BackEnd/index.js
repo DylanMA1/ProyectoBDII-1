@@ -16,47 +16,48 @@ let sqlPool;
 
 app.post('/api/set-sqlserver-connection', (req, res) => {
   const { user, password, server, database } = req.body;
-  
-  console.log('Received SQL Server connection parameters:', req.body);
 
-  // Verifica que todos los campos necesarios estén presentes
   if (!user || !password || !server || !database) {
     return res.status(400).send('Faltan parámetros de conexión');
   }
 
-  // Configuración de la conexión con los valores de req.body
   const sqlServerConfig = {
-    user: user,
-    password: password,
-    server: server, // Ejemplo: 'localhost' o la dirección de tu servidor SQL
-    database: database,
+    user,
+    password,
+    server,
+    database,
     options: {
-      encrypt: true, // True si necesitas una conexión segura (Azure, etc.)
-      trustServerCertificate: true // Para conexiones locales o pruebas
-    }
+      encrypt: true,
+      trustServerCertificate: true,
+    },
   };
 
-  // Conectar a SQL Server y asignar la conexión a sqlPool
-  sql.connect(sqlServerConfig).then(pool => {
-    if (pool.connected) {
-      console.log('Conectado a SQL Server');
-      sqlPool = pool; // Asignar la conexión a la variable global sqlPool
+  // Cierra la conexión existente si la hay
+  if (sqlPool) {
+    sqlPool.close();
+  }
 
-      // Ejecutar consulta para obtener las tablas
-      return pool.request().query(`
-        SELECT TABLE_NAME 
-        FROM INFORMATION_SCHEMA.TABLES 
-        WHERE TABLE_TYPE = 'BASE TABLE'
-      `);
-    }
-  }).then(result => {
-    // Enviar las tablas como respuesta
-    res.json(result.recordset);
-  }).catch(err => {
-    console.error('Error al conectar a SQL Server:', err);
-    res.status(500).send('Error al conectar a SQL Server');
-  });
-}); 
+  // Conectar a SQL Server y asignar la conexión a sqlPool
+  sql.connect(sqlServerConfig)
+    .then(pool => {
+      if (pool.connected) {
+        console.log('Conectado a SQL Server');
+        sqlPool = pool;
+        return pool.request().query(`
+          SELECT TABLE_NAME 
+          FROM INFORMATION_SCHEMA.TABLES 
+          WHERE TABLE_TYPE = 'BASE TABLE'
+        `);
+      }
+    })
+    .then(result => {
+      res.json(result.recordset);
+    })
+    .catch(err => {
+      console.error('Error al conectar a SQL Server:', err);
+      res.status(500).send('Error al conectar a SQL Server');
+    });
+});
 
 app.get('/api/sqlserver-data', async (req, res) => {
   if (!sqlPool) {
@@ -113,6 +114,10 @@ app.get('/api/sqlserver-data', async (req, res) => {
 // Ruta para configurar la conexión a PostgreSQL
 app.post('/api/set-connection', (req, res) => {
   const { user, host, database, password, port } = req.body;
+    // Cierra la conexión existente si la hay
+    if (pgPool) {
+      pgPool.end();
+    }
 
 // Configura la conexión
   pgPool = new Pool({
@@ -219,6 +224,41 @@ app.get('/api/postgresql-data', (req, res) => {
 });
 
 
+// Ruta para desconectar PostgreSQL
+app.post('/api/disconnect-postgresql', (req, res) => {
+  if (pgPool) {
+    pgPool.end()
+      .then(() => {
+        console.log('Conexión a PostgreSQL cerrada');
+        pgPool = null; // Asegúrate de que la conexión se reinicie
+        res.send('Desconectado de PostgreSQL');
+      })
+      .catch(err => {
+        console.error('Error al cerrar la conexión de PostgreSQL:', err);
+        res.status(500).send('Error al cerrar la conexión de PostgreSQL');
+      });
+  } else {
+    res.status(400).send('No hay conexión activa a PostgreSQL');
+  }
+});
+
+// Ruta para desconectar SQL Server
+app.post('/api/disconnect-sqlserver', (req, res) => {
+  if (sqlPool) {
+    sqlPool.close()
+      .then(() => {
+        console.log('Conexión a SQL Server cerrada');
+        sqlPool = null; // Asegúrate de que la conexión se reinicie
+        res.send('Desconectado de SQL Server');
+      })
+      .catch(err => {
+        console.error('Error al cerrar la conexión de SQL Server:', err);
+        res.status(500).send('Error al cerrar la conexión de SQL Server');
+      });
+  } else {
+    res.status(400).send('No hay conexión activa a SQL Server');
+  }
+});
 
 
 
