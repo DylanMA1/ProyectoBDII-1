@@ -13,13 +13,13 @@ import DatabaseButtons from "./components/DatabaseButtons";
 import axios from "axios";
 import Form from "./components/Form";
 
-interface PostgresData {
+interface DatabaseData {
   columns: any[];
   foreignKeys: any[];
 }
 
 function App() {
-  const [postgresData, setPostgresData] = useState<PostgresData>({
+  const [databaseData, setDatabaseData] = useState<DatabaseData>({
     columns: [],
     foreignKeys: [],
   });
@@ -30,9 +30,9 @@ function App() {
     password: "",
     port: "",
   });
-
   const [connectionUrl, setConnectionUrl] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
+  const [dbType, setDbType] = useState<string>(""); // Tipo de DB seleccionada
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -46,24 +46,41 @@ function App() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/set-connection", formData);
-      setConnectionUrl("http://localhost:5000/api/postgresql-data");
+      // Verificar si es PostgreSQL o MySQL para usar el endpoint correcto
+      const endpoint =
+        dbType === "postgresql"
+          ? "http://localhost:5000/api/set-connection-postgresql"
+          : "http://localhost:5000/api/set-connection-mysql";
+
+      // Realizar la solicitud de conexión al backend
+      {
+        console.log(formData);
+      }
+      await axios.post(endpoint, formData);
+
+      // Establecer la URL de los datos en función de la base de datos seleccionada
+      setConnectionUrl(
+        dbType === "postgresql"
+          ? "http://localhost:5000/api/postgresql-data"
+          : "http://localhost:5000/api/mysql-data"
+      );
       setConnected(true);
+
+      // Mostrar un toast de éxito
       toast({
         title: "Conexión exitosa.",
-        description:
-          "La conexión con PostgreSQL se ha establecido correctamente.",
+        description: `La conexión con ${dbType} se ha establecido correctamente.`,
         status: "success",
         duration: 5000,
         isClosable: true,
       });
       onClose();
     } catch (error) {
-      console.error("Error al establecer la conexión:", error);
+      // Manejar errores de conexión
+      console.error(`Error al establecer la conexión a ${dbType}:`, error);
       toast({
         title: "Error de conexión.",
-        description:
-          "Hubo un problema al intentar establecer la conexión con PostgreSQL.",
+        description: `Hubo un problema al intentar establecer la conexión con ${dbType}.`,
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -71,24 +88,27 @@ function App() {
     }
   };
 
-  const fetchPostgresData = async () => {
+  // Función para obtener los datos de la base de datos
+  const fetchDatabaseData = async () => {
     try {
-      const response = await axios.get<PostgresData>(connectionUrl);
-      setPostgresData(response.data);
+      const response = await axios.get<DatabaseData>(
+        `${connectionUrl}?database=${formData.database}`
+      );
+      setDatabaseData(response.data);
     } catch (error) {
-      console.error("Error al obtener datos de PostgreSQL:", error);
+      console.error(`Error al obtener datos de ${dbType}:`, error);
     }
   };
 
   useEffect(() => {
     if (connectionUrl) {
-      fetchPostgresData();
+      fetchDatabaseData();
     }
   }, [connectionUrl]);
 
   const handleDisconnect = () => {
     setConnectionUrl("");
-    setPostgresData({ columns: [], foreignKeys: [] });
+    setDatabaseData({ columns: [], foreignKeys: [] });
     setConnected(false);
     toast({
       title: "Desconectado.",
@@ -109,18 +129,27 @@ function App() {
         handleSubmit={handleSubmit}
         handleDisconnect={handleDisconnect}
         connected={connected}
+        dbType={dbType}
       />
       <Grid templateColumns="0.8fr 3fr">
         <GridItem>
-          <DatabaseButtons onOpen={onOpen} />
+          {/* Componente de los botones de selección de bases de datos */}
+          <DatabaseButtons
+            onOpen={(dbType: string) => {
+              setDbType(dbType);
+              onOpen();
+            }}
+          />
         </GridItem>
 
         <GridItem>
-          <PlantUMLDiagram data={postgresData} />
+          {/* Componente que muestra el diagrama UML basado en los datos */}
+          <PlantUMLDiagram data={databaseData} />
           <Box mt={8}>
-            Tablas en PostgreSQL:
+            Tablas en {dbType === "postgresql" ? "PostgreSQL" : "MySQL"}:
             <List spacing={3}>
-              {postgresData.columns.map((item, index) => (
+              {/* Listado de tablas de la base de datos */}
+              {databaseData.columns.map((item, index) => (
                 <ListItem key={index}>{item.table_name}</ListItem>
               ))}
             </List>

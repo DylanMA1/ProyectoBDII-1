@@ -1,106 +1,115 @@
 import React from "react";
 import {
-  Box,
-  FormControl,
-  FormLabel,
-  Input,
-  Button,
   Modal,
   ModalOverlay,
   ModalContent,
+  ModalHeader,
+  ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
 } from "@chakra-ui/react";
 
-interface PostgresConnectionFormProps {
-  formData: {
-    user: string;
-    host: string;
-    database: string;
-    password: string;
-    port: string;
-  };
+interface FormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  formData: any;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   handleDisconnect: () => void;
   connected: boolean;
-  isOpen: boolean;
-  onClose: () => void;
+  dbType: string; // Prop que indica el tipo de DB
 }
 
-const Form: React.FC<PostgresConnectionFormProps> = ({
+const Form: React.FC<FormProps> = ({
+  isOpen,
+  onClose,
   formData,
   handleChange,
   handleSubmit,
   handleDisconnect,
   connected,
-  isOpen,
-  onClose,
+  dbType,
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
-      <ModalContent maxWidth="60vw" borderRadius="md" overflow="hidden">
+      <ModalContent>
+        <ModalHeader>{`Conectar a ${
+          dbType === "postgresql" ? "PostgreSQL" : "MySQL"
+        }`}</ModalHeader>
         <ModalCloseButton />
-        <ModalBody padding={2}>
-          <Box as="form" onSubmit={handleSubmit} mt={4}>
-            <FormControl id="user" mb={4} isRequired>
+        <form onSubmit={handleSubmit}>
+          <ModalBody pb={6}>
+            <FormControl isRequired>
               <FormLabel>Usuario</FormLabel>
               <Input
-                type="text"
+                placeholder="Usuario"
                 name="user"
                 value={formData.user}
                 onChange={handleChange}
               />
             </FormControl>
-            <FormControl id="host" mb={4} isRequired>
+
+            <FormControl mt={4} isRequired>
               <FormLabel>Host</FormLabel>
               <Input
-                type="text"
+                placeholder="Host"
                 name="host"
                 value={formData.host}
                 onChange={handleChange}
               />
             </FormControl>
-            <FormControl id="database" mb={4} isRequired>
+
+            <FormControl mt={4} isRequired>
               <FormLabel>Base de Datos</FormLabel>
               <Input
-                type="text"
+                placeholder="Base de datos"
                 name="database"
                 value={formData.database}
                 onChange={handleChange}
               />
             </FormControl>
-            <FormControl id="password" mb={4} isRequired>
-              <FormLabel>Contraseña</FormLabel>
+
+            <FormControl mt={4} isRequired>
+              <FormLabel>Password</FormLabel>
               <Input
                 type="password"
+                placeholder="Password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
               />
             </FormControl>
-            <FormControl id="port" mb={4}>
-              <FormLabel>Puerto (Opcional)</FormLabel>
+
+            <FormControl mt={4} isRequired>
+              <FormLabel>Puerto</FormLabel>
               <Input
-                type="text"
+                placeholder="Puerto"
                 name="port"
                 value={formData.port}
                 onChange={handleChange}
               />
             </FormControl>
+          </ModalBody>
+
+          <ModalFooter>
             {!connected && (
               <Button colorScheme="teal" type="submit" mr={3}>
                 Conectar
               </Button>
             )}
             {connected && (
-              <Button colorScheme="red" onClick={handleDisconnect}>
+              <Button colorScheme="red" onClick={handleDisconnect} mr={3}>
                 Desconectar
               </Button>
             )}
-          </Box>
-        </ModalBody>
+            <Button onClick={onClose}>Cancelar</Button>
+          </ModalFooter>
+        </form>
       </ModalContent>
     </Modal>
   );
