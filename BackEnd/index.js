@@ -73,34 +73,19 @@ app.get('/api/sqlserver-data', async (req, res) => {
     FROM INFORMATION_SCHEMA.COLUMNS
   `;
 
-  const foreignKeysQuery = `
-    SELECT 
-      fk.name AS constraint_name,
-      tp.name AS table_name,
-      cp.name AS column_name,
-      tr.name AS referenced_table,
-      cr.name AS referenced_column
-    FROM sys.foreign_keys AS fk
-    INNER JOIN sys.tables AS tp ON fk.parent_object_id = tp.object_id
-    INNER JOIN sys.columns AS cp ON fk.parent_object_id = cp.object_id
-    INNER JOIN sys.tables AS tr ON fk.referenced_object_id = tr.object_id
-    INNER JOIN sys.columns AS cr ON fk.referenced_object_id = cr.object_id
-  `;
-
   try {
-    const [columnsResult, foreignKeysResult] = await Promise.all([
-      sqlPool.request().query(columnsQuery),
-      sqlPool.request().query(foreignKeysQuery)
-    ]);
+    const columnsResult = await sqlPool.request().query(columnsQuery);
+    console.log('Resultados de las columnas:', columnsResult.recordset);
+
     res.json({
-      columns: columnsResult.recordset,
-      foreignKeys: foreignKeysResult.recordset
+      columns: columnsResult.recordset
     });
   } catch (err) {
     console.error('Error en la consulta a SQL Server:', err);
     res.status(500).send('Error en la consulta a SQL Server');
   }
 });
+
   
 // Configuración de la conexión a MySQL
 //const mysqlConnection = mysql.createConnection({
