@@ -1,4 +1,4 @@
-import { Button, Card, Heading, List } from "@chakra-ui/react";
+/*import { Button, Card, Heading, List } from "@chakra-ui/react";
 import { BiLogoPostgresql } from "react-icons/bi";
 
 interface DatabaseButtonsProps {
@@ -37,4 +37,62 @@ const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
   );
 };
 
+export default DatabaseButtons;*/
+
+//#################################Todo###########################################
+
+import React from "react";
+import { Button, VStack, Box, Heading } from "@chakra-ui/react";
+import { BiLogoPostgresql } from "react-icons/bi";
+import { SiMicrosoftsqlserver } from "react-icons/si";
+import { DiMysql } from "react-icons/di";
+
+interface DatabaseButtonsProps {
+  onOpen: () => void;
+}
+
+const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
+  return (
+    <Box
+      padding={4}
+      boxShadow="md"
+      backgroundColor="gray.700"
+      borderRadius={10}
+      maxWidth={300}
+      minHeight={730}
+    >
+      <Heading marginBottom={4} size="md" color="white">
+        Bases de Datos
+      </Heading>
+      
+      <VStack spacing={4} align="stretch">
+        <Button
+          leftIcon={<BiLogoPostgresql color="blue" />}
+          onClick={onOpen} // Ajusta la lógica si es necesario
+          width="100%"
+        >
+          PostgreSQL
+        </Button>
+
+        <Button
+          leftIcon={<SiMicrosoftsqlserver color="red" />}
+          onClick={onOpen} // Ajusta la lógica si es necesario
+          width="100%"
+        >
+          SQL Server
+        </Button>
+
+        <Button
+          leftIcon={<DiMysql color="green" />}
+          onClick={onOpen} // Ajusta la lógica si es necesario
+          width="100%"
+        >
+          MySQL
+        </Button>
+      </VStack>
+    </Box>
+  );
+};
+
 export default DatabaseButtons;
+
