@@ -79,7 +79,7 @@ export const fetchPostgresData = async (connectionUrl: string | undefined) => {
 
 //########################################Importante###########################################
 
-/*import axios from "axios";
+import axios from "axios";
 
 // Función para establecer la conexión, tanto para PostgreSQL como para MySQL
 export const setConnection = async (formData: any, dbType: string) => {
@@ -119,70 +119,6 @@ export const fetchMySQLData = async (connectionUrl: string) => {
     return response.data;
   } catch (error) {
     throw new Error("Error al obtener datos de MySQL");
-  }
-};*/
-
-//#################################################################################
-
-import axios from "axios";
-
-// Función para establecer la conexión, tanto para PostgreSQL, MySQL como para SQL Server
-export const setConnection = async (formData: any, dbType: string) => {
-  try {
-    // Determina el endpoint en función del tipo de base de datos
-    let endpoint = "";
-    
-    if (dbType === "postgresql") {
-      endpoint = "http://localhost:5000/api/set-connection-postgresql";
-    } else if (dbType === "mysql") {
-      endpoint = "http://localhost:5000/api/set-connection-mysql";
-    } else if (dbType === "sqlserver") {
-      endpoint = "http://localhost:5000/api/set-connection-sqlserver"; // Nuevo endpoint para SQL Server
-    }
-
-    // Envía los datos de conexión al backend
-    await axios.post(endpoint, formData);
-
-    // Retorna la URL de los datos según el tipo de base de datos
-    if (dbType === "postgresql") {
-      return "http://localhost:5000/api/postgresql-data";
-    } else if (dbType === "mysql") {
-      return "http://localhost:5000/api/mysql-data";
-    } else if (dbType === "sqlserver") {
-      return "http://localhost:5000/api/sqlserver-data"; // Nuevo endpoint para obtener datos de SQL Server
-    }
-  } catch (error) {
-    throw new Error(`Error al establecer la conexión con ${dbType}`);
-  }
-};
-
-// Función para obtener los datos desde PostgreSQL
-export const fetchPostgresData = async (connectionUrl: string) => {
-  try {
-    const response = await axios.get(connectionUrl);
-    return response.data;
-  } catch (error) {
-    throw new Error("Error al obtener datos de PostgreSQL");
-  }
-};
-
-// Función para obtener los datos desde MySQL
-export const fetchMySQLData = async (connectionUrl: string) => {
-  try {
-    const response = await axios.get(connectionUrl);
-    return response.data;
-  } catch (error) {
-    throw new Error("Error al obtener datos de MySQL");
-  }
-};
-
-// Función para obtener los datos desde SQL Server
-export const fetchSQLServerData = async (connectionUrl: string) => {
-  try {
-    const response = await axios.get(connectionUrl);
-    return response.data;
-  } catch (error) {
-    throw new Error("Error al obtener datos de SQL Server");
   }
 };
 
