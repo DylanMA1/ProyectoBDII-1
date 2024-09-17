@@ -10,39 +10,34 @@ app.use(cors());
 app.use(express.json());
 
 let pgPool;
-
-// Configuración de la conexión a SQL Server
 let sqlPool;
 
+// Configuración de la conexión a SQL Server
 app.post('/api/set-sqlserver-connection', (req, res) => {
   const { user, password, server, database } = req.body;
-  
+
   console.log('Received SQL Server connection parameters:', req.body);
 
-  // Verifica que todos los campos necesarios estén presentes
   if (!user || !password || !server || !database) {
     return res.status(400).send('Faltan parámetros de conexión');
   }
 
-  // Configuración de la conexión con los valores de req.body
   const sqlServerConfig = {
     user: user,
     password: password,
-    server: server, // Ejemplo: 'localhost' o la dirección de tu servidor SQL
+    server: server,
     database: database,
     options: {
-      encrypt: true, // True si necesitas una conexión segura (Azure, etc.)
-      trustServerCertificate: true // Para conexiones locales o pruebas
+      encrypt: true,
+      trustServerCertificate: true
     }
   };
 
-  // Conectar a SQL Server y asignar la conexión a sqlPool
   sql.connect(sqlServerConfig).then(pool => {
     if (pool.connected) {
       console.log('Conectado a SQL Server');
-      sqlPool = pool; // Asignar la conexión a la variable global sqlPool
+      sqlPool = pool;
 
-      // Ejecutar consulta para obtener las tablas
       return pool.request().query(`
         SELECT TABLE_NAME 
         FROM INFORMATION_SCHEMA.TABLES 
@@ -50,14 +45,15 @@ app.post('/api/set-sqlserver-connection', (req, res) => {
       `);
     }
   }).then(result => {
-    // Enviar las tablas como respuesta
+    console.log('Resultado de la consulta:', result);
     res.json(result.recordset);
   }).catch(err => {
     console.error('Error al conectar a SQL Server:', err);
     res.status(500).send('Error al conectar a SQL Server');
   });
-}); 
+});
 
+// Ruta para obtener datos desde SQL Server en formato similar a PostgreSQL
 app.get('/api/sqlserver-data', async (req, res) => {
   if (!sqlPool) {
     return res.status(500).send('Conexión no establecida');
@@ -73,12 +69,41 @@ app.get('/api/sqlserver-data', async (req, res) => {
     FROM INFORMATION_SCHEMA.COLUMNS
   `;
 
+  const foreignKeysQuery = `
+    SELECT 
+      fk.name AS constraint_name,
+      tp.name AS table_name,
+      cp.name AS column_name,
+      tr.name AS referenced_table,
+      cr.name AS referenced_column
+    FROM sys.foreign_keys AS fk
+    INNER JOIN sys.tables AS tp ON fk.parent_object_id = tp.object_id
+    INNER JOIN sys.foreign_key_columns AS fkc ON fk.object_id = fkc.constraint_object_id
+    INNER JOIN sys.columns AS cp ON tp.object_id = cp.object_id AND cp.column_id = fkc.parent_column_id
+    INNER JOIN sys.tables AS tr ON fkc.referenced_object_id = tr.object_id
+    INNER JOIN sys.columns AS cr ON tr.object_id = cr.object_id AND cr.column_id = fkc.referenced_column_id
+  `;
+
   try {
-    const columnsResult = await sqlPool.request().query(columnsQuery);
-    console.log('Resultados de las columnas:', columnsResult.recordset);
+    const [columnsResult, foreignKeysResult] = await Promise.all([
+      sqlPool.request().query(columnsQuery),
+      sqlPool.request().query(foreignKeysQuery)
+    ]);
 
     res.json({
-      columns: columnsResult.recordset
+      columns: columnsResult.recordset.map(col => ({
+        table_name: col.table_name,
+        column_name: col.column_name,
+        data_type: col.data_type,
+        is_nullable: col.is_nullable,
+        column_default: col.column_default
+      })),
+      foreignKeys: foreignKeysResult.recordset.map(fk => ({
+        table_name: fk.table_name,
+        column_name: fk.column_name,
+        referenced_table: fk.referenced_table,
+        referenced_column: fk.referenced_column
+      }))
     });
   } catch (err) {
     console.error('Error en la consulta a SQL Server:', err);
@@ -86,20 +111,10 @@ app.get('/api/sqlserver-data', async (req, res) => {
   }
 });
 
-  
-// Configuración de la conexión a MySQL
-//const mysqlConnection = mysql.createConnection({
-//  host: 'localhost',
-//  user: 'mysql-user', // Cambia estos valores por los tuyos
-//  password: 'mysql-password',
-//  database: 'mysql-database'
-//});
-
-// Ruta para configurar la conexión a PostgreSQL
+// Configuración de la conexión a PostgreSQL
 app.post('/api/set-connection', (req, res) => {
   const { user, host, database, password, port } = req.body;
 
-// Configura la conexión
   pgPool = new Pool({
     user,
     host,
@@ -108,28 +123,6 @@ app.post('/api/set-connection', (req, res) => {
     port: parseInt(port, 10),
   });
 
-// Configuración de la conexión a SQL Server
-//const sqlServerConfig = {
-//  user: '',    // Cambia estos valores por los tuyos
-//  password: 'sqlserver-password',
-//  server: 'localhost',       // O el host de tu servidor SQL
-//  database: 'sqlserver-database',
-//  options: {
-//    encrypt: true,           // True si usas Azure o requiere encriptación
-//    trustServerCertificate: true // Solo si trabajas en local
-//  }
-//};
-
-// Verificar conexión a MySQL
-//mysqlConnection.connect(err => {
-//  if (err) {
-//    console.error('Error al conectar a MySQL:', err);
-// } else {
-//    console.log('Conectado a MySQL');
-//  }
-//});
-
-  // Verifica la conexión
   pgPool.connect(err => {
     if (err) {
       console.error('Error al conectar a PostgreSQL:', err);
@@ -140,23 +133,6 @@ app.post('/api/set-connection', (req, res) => {
     }
   });
 });
-
-// Verificar conexión a SQL Server
-//sql.connect(sqlServerConfig).then(() => {
-//  console.log('Conectado a SQL Server');
-//}).catch(err => {
-//  console.error('Error al conectar a SQL Server:', err);
-//});
-
-// Ruta para obtener datos desde MySQL
-//app.get('/api/mysql-data', (req, res) => {
-//  mysqlConnection.query('SELECT * FROM your_mysql_table', (err, results) => {
-//    if (err) {
-//      return res.status(500).send('Error en la consulta a MySQL');
-//   }
-//    res.json(results);
-//  });
-//});
 
 // Ruta para obtener datos desde PostgreSQL
 app.get('/api/postgresql-data', (req, res) => {
@@ -202,21 +178,6 @@ app.get('/api/postgresql-data', (req, res) => {
     res.status(500).send('Error en la consulta a PostgreSQL');
   });
 });
-
-
-
-
-
-
-// Ruta para obtener datos desde SQL Server
-//app.get('/api/sqlserver-data', async (req, res) => {
-//  try {
-//    const result = await sql.query('SELECT * FROM your_sqlserver_table');
-//    res.json(result.recordset); // Los resultados de SQL Server se devuelven en `recordset`
-// } catch (err) {
-//    res.status(500).send('Error en la consulta a SQL Server');
-//  }
-//});
 
 // Iniciar el servidor
 app.listen(port, () => {
