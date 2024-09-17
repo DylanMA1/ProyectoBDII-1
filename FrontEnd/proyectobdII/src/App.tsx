@@ -26,12 +26,12 @@ function App() {
   const [formData, setFormData] = useState({
     user: "",
     host: "",
-    server: "", // Agrega esta propiedad
+    server: "",
     database: "",
     password: "",
     port: "",
     dbType: "",
-    authType: "", // Agrega esta propiedad
+    authType: "",
   });
 
   const [connectionUrl, setConnectionUrl] = useState<string>("");
