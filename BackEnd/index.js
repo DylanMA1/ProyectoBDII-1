@@ -1,4 +1,4 @@
-const express = require('express');
+/*const express = require('express');
 const { Pool } = require('pg');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -148,6 +148,146 @@ app.get('/api/mysql-data', (req, res) => {
 
 
 // Iniciar el servidor
+app.listen(port, () => {
+  console.log(`Servidor corriendo en el puerto ${port}`);
+});*/
+
+
+//####################################################################################################################
+
+const express = require('express');
+const { Pool } = require('pg');
+const mysql = require('mysql2');
+const sql = require('mssql'); // Importar mssql
+const cors = require('cors');
+
+const app = express();
+const port = 5000;
+
+app.use(cors());
+app.use(express.json());
+
+let pgPool;
+let mysqlConnection;
+let sqlServerConnection;
+
+// PostgreSQL
+app.post('/api/set-connection-postgresql', (req, res) => {
+  const { user, host, database, password, port } = req.body;
+  pgPool = new Pool({
+    user,
+    host,
+    database,
+    password,
+    port: parseInt(port, 10),
+  });
+
+  pgPool.connect((err) => {
+    if (err) {
+      console.error('Error al conectar a PostgreSQL:', err);
+      res.status(500).send('Error al conectar a PostgreSQL');
+    } else {
+      console.log('Conectado a PostgreSQL');
+      res.send('Conexión establecida');
+    }
+  });
+});
+
+// MySQL
+app.post('/api/set-connection-mysql', (req, res) => {
+  const { user, host, database, password, port } = req.body;
+  mysqlConnection = mysql.createConnection({
+    host,
+    user,
+    database,
+    password,
+    port: parseInt(port, 10),
+  });
+
+  mysqlConnection.connect((err) => {
+    if (err) {
+      console.error('Error al conectar a MySQL:', err);
+      res.status(500).send('Error al conectar a MySQL');
+    } else {
+      console.log('Conectado a MySQL');
+      res.send('Conexión a MySQL establecida');
+    }
+  });
+});
+
+// SQL Server
+app.post('/api/set-connection-sqlserver', (req, res) => {
+  const { user, password, server, database } = req.body;
+
+  const config = {
+    user,
+    password,
+    server,
+    database,
+    options: {
+      encrypt: true,
+      trustServerCertificate: true, // Si es necesario
+    },
+  };
+
+  sql.connect(config, (err) => {
+    if (err) {
+      console.error('Error al conectar a SQL Server:', err);
+      res.status(500).send('Error al conectar a SQL Server');
+    } else {
+      console.log('Conectado a SQL Server');
+      res.send('Conexión a SQL Server establecida');
+    }
+  });
+});
+
+// Ruta para obtener datos desde SQL Server
+app.get('/api/sqlserver-data', (req, res) => {
+  if (!sqlServerConnection) {
+    return res.status(500).send('Conexión no establecida');
+  }
+
+  const database = req.query.database;
+
+  const columnsQuery = `
+    SELECT
+      TABLE_NAME as table_name, 
+      COLUMN_NAME as column_name, 
+      DATA_TYPE as data_type, 
+      IS_NULLABLE as is_nullable, 
+      COLUMN_DEFAULT as column_default
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_CATALOG = @database;
+  `;
+
+  const foreignKeysQuery = `
+    SELECT
+      fk.TABLE_NAME as table_name,
+      fk.COLUMN_NAME as column_name,
+      fk.CONSTRAINT_NAME as constraint_name,
+      fk.REFERENCED_TABLE_NAME as referenced_table,
+      fk.REFERENCED_COLUMN_NAME as referenced_column
+    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS as fk
+    WHERE fk.CONSTRAINT_CATALOG = @database;
+  `;
+
+  const request = new sql.Request();
+  request.input('database', sql.VarChar, database);
+
+  Promise.all([
+    request.query(columnsQuery),
+    request.query(foreignKeysQuery),
+  ]).then(([columnsResult, foreignKeysResult]) => {
+    res.json({
+      columns: columnsResult.recordset,
+      foreignKeys: foreignKeysResult.recordset,
+    });
+  }).catch(err => {
+    console.error('Error en la consulta a SQL Server:', err);
+    res.status(500).send('Error en la consulta a SQL Server');
+  });
+});
+
 app.listen(port, () => {
   console.log(`Servidor corriendo en el puerto ${port}`);
 });
