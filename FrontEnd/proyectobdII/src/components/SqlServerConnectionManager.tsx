@@ -22,6 +22,7 @@ interface SqlServerConnectionManagerProps {
     password: string;
     port: string;
     authType: string;
+    dbType: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -46,18 +47,28 @@ const SqlServerConnectionManager: React.FC<SqlServerConnectionManagerProps> = ({
         <ModalCloseButton />
         <ModalBody>
           <form onSubmit={handleSubmit}>
-            <Input
-              name="user"
-              value={formData.user}
+            <Select
+              name="authType"
+              value={formData.authType}
               onChange={handleChange}
-              placeholder="Usuario"
+              placeholder="Tipo de Autenticación"
               mb={3}
-            />
+            >
+              <option value="sql">Autenticación SQL Server</option>
+              <option value="windows">Autenticación de Windows</option>
+            </Select>
             <Input
               name="server"
               value={formData.server}
               onChange={handleChange}
               placeholder="Servidor"
+              mb={3}
+            />
+            <Input
+              name="user"
+              value={formData.user}
+              onChange={handleChange}
+              placeholder="Usuario"
               mb={3}
             />
             <Input
@@ -82,19 +93,8 @@ const SqlServerConnectionManager: React.FC<SqlServerConnectionManagerProps> = ({
               placeholder="Puerto"
               mb={3}
             />
-            
-            {/* Campo adicional solo para SQL Server: método de autenticación */}
-            <Select
-              name="authType"
-              value={formData.authType}
-              onChange={handleChange}
-              mb={3}
-            >
-              <option value="sqlserver-auth">Autenticación SQL Server</option>
-              <option value="windows-auth">Autenticación Windows</option>
-            </Select>
             <Button type="submit" colorScheme="blue" mr={3}>
-              {connected ? "Conectado" : "Conectar"}
+              {connected ? "": "Conectar"}
             </Button>
           </form>
         </ModalBody>
