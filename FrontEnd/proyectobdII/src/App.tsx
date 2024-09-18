@@ -354,24 +354,39 @@ import {
 import PlantUMLDiagram from "./components/PlantUMLDiagram";
 import DatabaseButtons from "./components/DatabaseButtons";
 import axios from "axios";
-import ConnectionManager from "./components/ConnectionManager"; // El componente que maneja las conexiones
+import SqlServerConnectionManager from "./components/SqlServerConnectionManager";
+import ConnectionManager from "./components/ConnectionManager";
 
 interface DatabaseData {
   columns: any[];
   foreignKeys: any[];
 }
 
+// Datos del formulario, diferenciando entre SQL Server y otras DBs
+type FormData = {
+  user: string;
+  host?: string;
+  server?: string;
+  database: string;
+  password: string;
+  port: string;
+  authType?: string;
+  dbType: string;
+};
+
 function App() {
   const [databaseData, setDatabaseData] = useState<DatabaseData>({
     columns: [],
     foreignKeys: [],
   });
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     user: "",
-    host: "",
+    host: "",   // Host solo para PostgreSQL y MySQL
+    server: "", // Server solo para SQL Server
     database: "",
     password: "",
     port: "",
+    authType: "",
     dbType: "", // Tipo de base de datos seleccionada (PostgreSQL, MySQL, SQL Server)
   });
   const [connectionUrl, setConnectionUrl] = useState<string>("");
@@ -469,16 +484,28 @@ function App() {
 
   return (
     <>
-      <ConnectionManager
-        isOpen={isOpen}
-        onClose={onClose}
-        formData={formData}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-        handleDisconnect={handleDisconnect}
-        connected={connected}
-        dbType={dbType}
-      />
+      {dbType === "sqlserver" ? (
+        <SqlServerConnectionManager
+          isOpen={isOpen}
+          onClose={onClose}
+          formData={formData as FormData & { server: string; authType: string }}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          handleDisconnect={handleDisconnect}
+          connected={connected}
+        />
+      ) : (
+        <ConnectionManager
+          isOpen={isOpen}
+          onClose={onClose}
+          formData={formData as FormData & { host: string }}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+          handleDisconnect={handleDisconnect}
+          connected={connected}
+          dbType={dbType}
+        />
+      )}
       <Grid templateColumns="0.8fr 3fr">
         <GridItem>
           {/* Componente de los botones de selección de base de datos */}
@@ -509,3 +536,4 @@ function App() {
 }
 
 export default App;
+

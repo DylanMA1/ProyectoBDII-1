@@ -9,27 +9,27 @@ import {
   ModalFooter,
   Button,
   Input,
+  Select,
 } from "@chakra-ui/react";
 
-interface ConnectionManagerProps {
+interface SqlServerConnectionManagerProps {
   isOpen: boolean;
   onClose: () => void;
   formData: {
     user: string;
-    host: string;
+    server: string;
     database: string;
     password: string;
     port: string;
-    dbType: string;
+    authType: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   handleDisconnect: () => void;
   connected: boolean;
-  dbType: string;
 }
 
-const ConnectionManager: React.FC<ConnectionManagerProps> = ({
+const SqlServerConnectionManager: React.FC<SqlServerConnectionManagerProps> = ({
   isOpen,
   onClose,
   formData,
@@ -37,13 +37,12 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
   handleSubmit,
   handleDisconnect,
   connected,
-  dbType,
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Conectar a {dbType.toUpperCase()}</ModalHeader>
+        <ModalHeader>Conectar a SQL Server</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <form onSubmit={handleSubmit}>
@@ -55,10 +54,10 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
               mb={3}
             />
             <Input
-              name="host"
-              value={formData.host}
+              name="server"
+              value={formData.server}
               onChange={handleChange}
-              placeholder="Host"
+              placeholder="Servidor"
               mb={3}
             />
             <Input
@@ -83,6 +82,17 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
               placeholder="Puerto"
               mb={3}
             />
+            
+            {/* Campo adicional solo para SQL Server: método de autenticación */}
+            <Select
+              name="authType"
+              value={formData.authType}
+              onChange={handleChange}
+              mb={3}
+            >
+              <option value="sqlserver-auth">Autenticación SQL Server</option>
+              <option value="windows-auth">Autenticación Windows</option>
+            </Select>
             <Button type="submit" colorScheme="blue" mr={3}>
               {connected ? "Conectado" : "Conectar"}
             </Button>
@@ -100,4 +110,4 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
   );
 };
 
-export default ConnectionManager;
+export default SqlServerConnectionManager;

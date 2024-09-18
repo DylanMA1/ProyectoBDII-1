@@ -100,8 +100,7 @@ export default DatabaseButtons;*/
 
 import { Button, Card, Heading, List } from "@chakra-ui/react";
 import { BiLogoPostgresql } from "react-icons/bi";
-import { SiMysql } from "react-icons/si"; // Logo de MySQL
-import { FaServer } from "react-icons/fa"; // Icono para SQL Server
+import { SiMysql, SiMicrosoftsqlserver } from "react-icons/si"; // Logo de MySQL y SQL Server
 
 interface DatabaseButtonsProps {
   onOpen: (dbType: string) => void;
@@ -135,7 +134,7 @@ const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
           MySQL
         </Button>
         <Button
-          leftIcon={<FaServer color="red" />} // Icono de SQL Server
+          leftIcon={<SiMicrosoftsqlserver color="red" />}
           onClick={() => onOpen("sqlserver")}
           width="100%"
           mt={4}
@@ -148,6 +147,8 @@ const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
 };
 
 export default DatabaseButtons;
+
+
 
 
 
