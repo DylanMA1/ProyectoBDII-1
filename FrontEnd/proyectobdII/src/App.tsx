@@ -180,12 +180,7 @@ function App() {
           />
         </GridItem>
         <GridItem>
-          <VStack
-            overflow="scroll"
-            spacing={4}
-            paddingY={4}
-            minHeight={720}
-          >
+          <VStack overflow="scroll" spacing={4} paddingY={4} minHeight={720}>
             {Array.from(connections.values()).map(
               (connection, index) =>
                 connection.connected && (

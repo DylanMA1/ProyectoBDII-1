@@ -23,7 +23,7 @@ interface ConnectionManagerProps {
     password: string;
     port: string;
     dbType: string;
-  } ;
+  };
   handleChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => void;
@@ -134,6 +134,11 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
               <Button onClick={onClose} marginLeft={2}>
                 Cerrar
               </Button>
+              {connected && (
+                <Button colorScheme="blue" onClick={onSubmit}>
+                  Actualizar
+                </Button>
+              )}
             </ModalFooter>
           </form>
         </ModalBody>
