@@ -9,6 +9,7 @@ import {
   ModalFooter,
   Button,
   Input,
+  Select,
 } from "@chakra-ui/react";
 
 interface ConnectionManagerProps {
@@ -16,10 +17,12 @@ interface ConnectionManagerProps {
   onClose: () => void;
   formData: {
     user: string;
-    host: string;
+    host?: string;
+    server?: string;
     database: string;
     password: string;
     port: string;
+    authType?: string;
     dbType: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
@@ -54,13 +57,34 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
               placeholder="Usuario"
               mb={3}
             />
-            <Input
-              name="host"
-              value={formData.host}
-              onChange={handleChange}
-              placeholder="Host"
-              mb={3}
-            />
+            {dbType === "sqlserver" ? (
+              <>
+                <Input
+                  name="server"
+                  value={formData.server || ''} // Manejo de valor opcional
+                  onChange={handleChange}
+                  placeholder="Servidor"
+                  mb={3}
+                />
+                <Select
+                  name="authType"
+                  value={formData.authType || ''} // Manejo de valor opcional
+                  onChange={handleChange}
+                  mb={3}
+                >
+                  <option value="windows">Autenticación de Windows</option>
+                  <option value="sql">Autenticación de SQL Server</option>
+                </Select>
+              </>
+            ) : (
+              <Input
+                name="host"
+                value={formData.host || ''} // Manejo de valor opcional
+                onChange={handleChange}
+                placeholder="Host"
+                mb={3}
+              />
+            )}
             <Input
               name="database"
               value={formData.database}

@@ -24,7 +24,9 @@ interface SqlServerConnectionManagerProps {
     authType: string;
     dbType: string;
   };
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   handleDisconnect: () => void;
   connected: boolean;
@@ -94,7 +96,7 @@ const SqlServerConnectionManager: React.FC<SqlServerConnectionManagerProps> = ({
               mb={3}
             />
             <Button type="submit" colorScheme="blue" mr={3}>
-              {connected ? "": "Conectar"}
+              {connected ? "Conectado" : "Conectar"}
             </Button>
           </form>
         </ModalBody>
