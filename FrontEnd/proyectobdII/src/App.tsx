@@ -143,7 +143,7 @@ function App() {
       <ConnectionManager
         isOpen={isOpen}
         onClose={onClose}
-        formData={connections.get(currentDbType)?.formData || {}}
+        formData={connections.get(currentDbType)?.formData || {}} //No  afecta en nada
         handleChange={handleChange}
         handleSubmit={handleSubmit}
         handleDisconnect={handleDisconnect}

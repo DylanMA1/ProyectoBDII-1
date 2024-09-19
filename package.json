@@ -13,8 +13,11 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "framer-motion": "^11.5.4",
+    "@types/node": "^22.5.5",
+    "@types/react": "^18.3.7",
+    "framer-motion": "^11.5.5",
     "mssql": "^11.0.1",
-    "mysql2": "^3.11.3"
+    "mysql2": "^3.11.3",
+    "typescript": "^5.6.2"
   }
 }
