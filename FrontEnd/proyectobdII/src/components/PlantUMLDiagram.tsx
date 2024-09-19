@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box,
   Card,
   Heading,
   Image,
@@ -15,7 +14,12 @@ import {
 import plantumlEncoder from "plantuml-encoder";
 
 const encodePlantUML = (uml: string): string => {
-  return plantumlEncoder.encode(uml);
+  try {
+    return plantumlEncoder.encode(uml);
+  } catch (error) {
+    console.error("Error encoding PlantUML:", error);
+    return "";
+  }
 };
 
 interface PlantUMLProps {
@@ -32,7 +36,7 @@ const PlantUMLDiagram: React.FC<PlantUMLProps> = ({ data, dbName }) => {
 
   useEffect(() => {
     if (data.columns.length > 0) {
-      let entities = "@startuml\n !theme carbon-gray";
+      let entities = "@startuml\n !theme mars";
       let relationships = "";
 
       const tableColumns: { [key: string]: any[] } = {};
@@ -44,17 +48,13 @@ const PlantUMLDiagram: React.FC<PlantUMLProps> = ({ data, dbName }) => {
       });
 
       Object.keys(tableColumns).forEach((tableName) => {
-        entities += `
-        entity ${tableName} {
-          ${tableColumns[tableName]
-            .map((col: any) => `${col.column_name} : ${col.data_type}`)
-            .join("\n")}
-        }
-        `;
+        entities += `\nentity ${tableName} {\n  ${tableColumns[tableName]
+          .map((col: any) => `${col.column_name} : ${col.data_type}`)
+          .join("\n  ")}\n}`;
       });
 
       data.foreignKeys.forEach((fk: any) => {
-        relationships += `${fk.table_name} --> ${fk.referenced_table} : ${fk.column_name} -> ${fk.referenced_column}\n`;
+        relationships += `\n${fk.table_name} --> ${fk.referenced_table} : ${fk.column_name} -> ${fk.referenced_column}`;
       });
 
       const uml = `${entities}\n${relationships}\n@enduml`;
@@ -63,13 +63,15 @@ const PlantUMLDiagram: React.FC<PlantUMLProps> = ({ data, dbName }) => {
   }, [data]);
 
   const encodedUML = encodePlantUML(umlCode);
-  const plantUMLServerUrl = `http://www.plantuml.com/plantuml/svg/${encodedUML}`;
+  const plantUMLServerUrl = encodedUML
+    ? `http://www.plantuml.com/plantuml/svg/${encodedUML}`
+    : "";
 
   return (
     <>
-      <Card p={4} borderRadius="md" shadow="md" maxWidth={710} bg="lightblue">
+      <Card p={4} borderRadius="md" shadow="md" maxWidth={710}>
         <Heading marginBottom={4}>{dbName}</Heading>
-        {umlCode && (
+        {encodedUML && (
           <Image
             src={plantUMLServerUrl}
             alt="Diagrama de PlantUML"
@@ -87,8 +89,14 @@ const PlantUMLDiagram: React.FC<PlantUMLProps> = ({ data, dbName }) => {
         <ModalContent bg="transparent">
           <ModalHeader>{dbName}</ModalHeader>
           <ModalCloseButton />
-          <ModalBody display="flex" justifyContent="center">
-            <Image src={plantUMLServerUrl} alt="Diagrama completo" />
+          <ModalBody display="flex" justifyContent="center" alignItems="center">
+            <Image
+              src={plantUMLServerUrl}
+              alt="Diagrama completo"
+              maxWidth="100%"
+              maxHeight="90vh"
+              objectFit="contain"
+            />
           </ModalBody>
         </ModalContent>
       </Modal>

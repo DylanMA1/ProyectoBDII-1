@@ -14,9 +14,9 @@ const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
       backgroundColor="gray.700"
       borderRadius={10}
       maxWidth={300}
-      minHeight={730}
+      height="100%"
     >
-      <Heading marginBottom={2}>Bases de Datos</Heading>
+      <Heading marginBottom={4}>Bases de Datos</Heading>
       <List alignContent="center">
         <Button
           leftIcon={<BiLogoPostgresql color="lightblue" />}
@@ -47,9 +47,3 @@ const DatabaseButtons: React.FC<DatabaseButtonsProps> = ({ onOpen }) => {
 };
 
 export default DatabaseButtons;
-
-
-
-
-
-

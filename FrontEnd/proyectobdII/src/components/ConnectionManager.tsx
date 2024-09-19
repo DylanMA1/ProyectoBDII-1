@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -9,7 +9,8 @@ import {
   ModalFooter,
   Button,
   Input,
-  Select,
+  FormLabel,
+  FormControl,
 } from "@chakra-ui/react";
 
 interface ConnectionManagerProps {
@@ -17,15 +18,15 @@ interface ConnectionManagerProps {
   onClose: () => void;
   formData: {
     user: string;
-    host?: string;
-    server?: string;
+    host: string;
     database: string;
     password: string;
     port: string;
-    authType?: string;
     dbType: string;
-  };
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  } ;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   handleDisconnect: () => void;
   connected: boolean;
@@ -42,6 +43,15 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
   connected,
   dbType,
 }) => {
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    await handleSubmit(e);
+    setLoading(false);
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
@@ -49,57 +59,55 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
         <ModalHeader>Conectar a {dbType.toUpperCase()}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <form onSubmit={handleSubmit}>
-            <Input
-              name="user"
-              value={formData.user}
-              onChange={handleChange}
-              placeholder="Usuario"
-              mb={3}
-            />
-            {dbType === "sqlserver" ? (
-              <>
-                <Input
-                  name="server"
-                  value={formData.server || ''} // Manejo de valor opcional
-                  onChange={handleChange}
-                  placeholder="Servidor"
-                  mb={3}
-                />
-                <Select
-                  name="authType"
-                  value={formData.authType || ''} // Manejo de valor opcional
-                  onChange={handleChange}
-                  mb={3}
-                >
-                  <option value="windows">Autenticación de Windows</option>
-                  <option value="sql">Autenticación de SQL Server</option>
-                </Select>
-              </>
-            ) : (
+          <form id="connection-form" onSubmit={onSubmit}>
+            <FormControl id="user" isRequired>
+              <FormLabel>User</FormLabel>
+
+              <Input
+                name="user"
+                value={formData.user}
+                onChange={handleChange}
+                placeholder="Usuario"
+                mb={3}
+              />
+            </FormControl>
+            <FormControl id="host" isRequired>
+              <FormLabel>Host</FormLabel>
+
               <Input
                 name="host"
-                value={formData.host || ''} // Manejo de valor opcional
+                value={formData.host}
                 onChange={handleChange}
                 placeholder="Host"
                 mb={3}
               />
-            )}
-            <Input
-              name="database"
-              value={formData.database}
-              onChange={handleChange}
-              placeholder="Base de Datos"
-              mb={3}
-            />
-            <Input
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Contraseña"
-              mb={3}
-            />
+            </FormControl>
+            <FormControl id="database" isRequired>
+              <FormLabel>DataBase</FormLabel>
+
+              <Input
+                name="database"
+                value={formData.database}
+                onChange={handleChange}
+                placeholder="Base de Datos"
+                mb={3}
+              />
+            </FormControl>
+
+            <FormControl id="password" isRequired>
+              <FormLabel>Password</FormLabel>
+
+              <Input
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Contraseña"
+                mb={3}
+              />
+            </FormControl>
+            <FormLabel>Port</FormLabel>
+
             <Input
               name="port"
               value={formData.port}
@@ -107,18 +115,28 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({
               placeholder="Puerto"
               mb={3}
             />
-            <Button type="submit" colorScheme="blue" mr={3}>
-              {connected ? "Conectado" : "Conectar"}
-            </Button>
+            <ModalFooter>
+              {!connected && (
+                <Button
+                  colorScheme="teal"
+                  type="submit"
+                  mr={3}
+                  isLoading={loading}
+                >
+                  Conectar
+                </Button>
+              )}
+              {connected && (
+                <Button colorScheme="red" onClick={handleDisconnect}>
+                  Desconectar
+                </Button>
+              )}
+              <Button onClick={onClose} marginLeft={2}>
+                Cerrar
+              </Button>
+            </ModalFooter>
           </form>
         </ModalBody>
-        {connected && (
-          <ModalFooter>
-            <Button colorScheme="red" onClick={handleDisconnect}>
-              Desconectar
-            </Button>
-          </ModalFooter>
-        )}
       </ModalContent>
     </Modal>
   );
