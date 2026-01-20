@@ -82,7 +82,7 @@ Before running the project, ensure you have installed:
 
 ---
 
-## ⚙️ Installation
+## Installation
 
 1. Clone the repository:
 
