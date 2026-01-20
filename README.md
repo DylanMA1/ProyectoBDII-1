@@ -37,7 +37,6 @@ Database-Schema-Visualizer-main/
 │   └── index.js
 │
 ├── FrontEnd/             # React application
-│   └── proyectobdII/
 │
 ├── package.json          # Main project scripts
 ├── package-lock.json
