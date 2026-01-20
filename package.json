@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "npm-run-all --parallel FrontEnd BackEnd",
-    "FrontEnd": "cd FrontEnd/proyectobdII && npm run dev",
+    "FrontEnd": "cd FrontEnd && npm run dev",
     "BackEnd": "cd BackEnd && node index.js"
   },
   "devDependencies": {
